@@ -29,13 +29,9 @@ desktop.ini
 # Logs
 *.log
 
-# JMeter results
-jmeter/results/
-jmeter/report/
-*.jtl
+# Build artifacts
+backend/package-lock.json
 .trae-html-share-packages/
 jmeter/
 resume-java-intern/
 uploads/
-backend/logs/
-backend/target/

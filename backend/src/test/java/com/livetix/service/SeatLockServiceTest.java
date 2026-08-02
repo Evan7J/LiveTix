@@ -50,7 +50,6 @@ class SeatLockServiceTest {
     void testLockSuccess() {
         when(redisTemplate.opsForHash()).thenReturn(hashOps);
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        // SET NX 返回 true 表示获取锁成功
         when(valueOps.setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class)))
                 .thenReturn(true);
         when(hashOps.get(anyString(), anyString())).thenReturn("available");

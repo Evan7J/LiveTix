@@ -59,7 +59,6 @@ class OrderServiceTest {
     @DisplayName("重复提交 requestId → 拒绝")
     void testDuplicateRequestId() {
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        // 幂等校验失败
         when(valueOps.setIfAbsent(contains("idempotent"), any(), anyLong(), any(TimeUnit.class)))
                 .thenReturn(false);
 
@@ -72,13 +71,10 @@ class OrderServiceTest {
     @DisplayName("演出不存在 → 返回错误")
     void testShowNotFound() {
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
-        // 幂等通过
         when(valueOps.setIfAbsent(contains("idempotent"), any(), anyLong(), any(TimeUnit.class)))
                 .thenReturn(true);
-        // 防重锁通过
         when(valueOps.setIfAbsent(contains("user:order:lock"), any(), anyLong(), any(TimeUnit.class)))
                 .thenReturn(true);
-        // 缓存命中空值
         when(valueOps.get(contains("show:"))).thenReturn("__NULL__");
 
         Result<?> r = orderService.createOrder(1L, buildDTO());
@@ -93,7 +89,7 @@ class OrderServiceTest {
         when(valueOps.setIfAbsent(anyString(), any(), anyLong(), any(TimeUnit.class)))
                 .thenReturn(true);
         when(valueOps.get(contains("show:"))).thenReturn(null);
-        when(showMapper.selectById(1L)).thenReturn(null); // DB也查不到
+        when(showMapper.selectById(1L)).thenReturn(null);
 
         Result<?> r = orderService.createOrder(1L, buildDTO());
         assertNotEquals(200, r.getCode());

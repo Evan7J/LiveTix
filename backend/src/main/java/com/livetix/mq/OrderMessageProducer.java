@@ -20,12 +20,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * P1-2: RocketMQ 异步下单生产者
- *
- * M1 修复: onException 回调中实际回滚 Redis 预扣库存（不再 TODO）
- * M2 修复: @ConditionalOnBean(RocketMQTemplate.class) 在用户组件上评估早于
- *          auto-configuration 注册 rocketMQTemplate，条件永远不成立（bean 从未创建），
- *          改用 @ConditionalOnProperty 按配置判断
+ * RocketMQ 异步下单生产者
+ * 仅在配置了 rocketmq.name-server 时生效
  */
 @Slf4j
 @Component
@@ -82,7 +78,7 @@ public class OrderMessageProducer {
     }
 
     /**
-     * M1: 发送失败回滚 Redis 预扣库存 + 释放用户防重锁 + 写入失败结果（前端轮询立即感知）
+     * 发送失败回滚 Redis 预扣库存 + 释放用户防重锁
      */
     private void rollbackAndNotifyFail(Long userId, OrderCreateDTO dto) {
         String stockKey = STOCK_PRE_KEY + dto.getShowId();

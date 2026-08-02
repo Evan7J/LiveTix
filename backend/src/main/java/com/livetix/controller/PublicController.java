@@ -33,15 +33,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Public APIs — no login required
- *
- * ============================================================
- * 安全加固：
- *   1. 登录接口添加 Redis 滑动窗口限流
- *   2. 支付回调添加签名验证 + 金额校验
- *   3. 注册接口使用 RegisterDTO 隔离敏感字段
- *   4. 分页参数上限校验
- * ============================================================
+ * 公开接口，无需登录
  */
 @RestController
 @RequestMapping("/api/public")
@@ -114,16 +106,9 @@ public class PublicController {
         return result;
     }
 
-    /**
-     * 用户注册
-     * 安全措施：使用 RegisterDTO 隔离敏感字段，后端强制设置 role='user'
-     */
-    /**
-     * 41 修复: 注册接口加 IP 限流 — 每小时最多 3 次注册
-     */
     @PostMapping("/register")
     public Result<?> register(@Valid @RequestBody RegisterDTO dto, jakarta.servlet.http.HttpServletRequest request) {
-        // 41: IP 限流 — 每小时每个 IP 最多注册 3 次
+        // 注册限流：每小时每个 IP 最多 3 次
         String ip = getClientIp(request);
         String regLimitKey = "livetix:reg:limit:" + ip;
         Long regCount = redisTemplate.opsForValue().increment(regLimitKey);
@@ -158,13 +143,6 @@ public class PublicController {
         return userService.register(user);
     }
 
-    /**
-     * 发送验证码
-     * 将验证码存储到 Redis，TTL 5分钟
-     */
-    /**
-     * 42 修复: 发送验证码 — IP限流 + 目标限流 + 发送间隔
-     */
     @PostMapping("/send-code")
     public Result<?> sendVerifyCode(@RequestBody Map<String, String> body,
                                     jakarta.servlet.http.HttpServletRequest request) {
@@ -176,7 +154,7 @@ public class PublicController {
 
         String ip = getClientIp(request);
 
-        // 42: IP 限流 — 每小时每个 IP 最多 10 次发码
+        // IP 限流：每小时每个 IP 最多 10 次
         String ipLimitKey = "livetix:code:ip:" + ip;
         Long ipCount = redisTemplate.opsForValue().increment(ipLimitKey);
         if (ipCount != null && ipCount == 1) redisTemplate.expire(ipLimitKey, 1, TimeUnit.HOURS);
@@ -184,7 +162,7 @@ public class PublicController {
             return Result.fail("发送过于频繁，请稍后再试");
         }
 
-        // 42: 目标限流 — 同一手机号/邮箱 60s 内只能发一次
+        // 同一手机号/邮箱 60s 内只能发一次
         String intervalKey = "livetix:code:interval:" + target;
         Boolean hasInterval = redisTemplate.hasKey(intervalKey);
         if (Boolean.TRUE.equals(hasInterval)) {
@@ -200,7 +178,7 @@ public class PublicController {
         // 42: 设置发送间隔标记，60s
         redisTemplate.opsForValue().set(intervalKey, "1", 60, TimeUnit.SECONDS);
 
-        // TODO: 集成短信/邮件服务发送真实验证码
+        // 验证码通过控制台输出（生产环境需接入短信/邮件服务）
         System.out.println("========================================");
         System.out.println("  验证码 [" + target + "]: " + code);
         System.out.println("========================================");
@@ -305,12 +283,9 @@ public class PublicController {
      * 获取指定演出的已售座位坐标列表
      * 返回的坐标格式为 "r-c"（行-列），与管理员设置的 cells 数据格式一致
      */
-    /**
-     * 38 修复: 已售座位缓存 + 分页限制，避免全表扫描
-     */
     @GetMapping("/shows/{id}/sold-cells")
     public Result<?> soldCells(@PathVariable Long id) {
-        // 38: 先从 Redis 缓存读取（TTL 30s，减少 DB 查询频率）
+        // 从缓存读取已售座位，TTL 30s
         String cacheKey = "livetix:sold:cells:" + id;
         @SuppressWarnings("unchecked")
         java.util.List<String> cached = (java.util.List<String>) redisTemplate.opsForValue().get(cacheKey);
@@ -318,7 +293,7 @@ public class PublicController {
             return Result.ok(cached);
         }
 
-        // 38: 加 LIMIT 200 防止大结果集，用 last("LIMIT 200") 限制返回
+        // 限制最多返回 200 条
         List<Order> orders = orderMapper.selectList(
                 new LambdaQueryWrapper<Order>()
                         .eq(Order::getShowId, id)
@@ -340,7 +315,7 @@ public class PublicController {
             }
         }
         List<String> result = List.copyOf(soldCells);
-        // 38: 缓存 30 秒，减轻 DB 压力
+        // 缓存 30 秒
         redisTemplate.opsForValue().set(cacheKey, result, 30, TimeUnit.SECONDS);
         return Result.ok(result);
     }
@@ -489,7 +464,7 @@ public class PublicController {
 
             return true;
         } catch (Exception e) {
-            // 37 修复: Redis 异常时拒绝请求（fail-closed），防止暴力破解
+            // Redis 异常时拒绝请求，防止暴力破解
             return false;
         }
     }
