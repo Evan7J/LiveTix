@@ -7,12 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Scheduled task: cancel unpaid orders every 60 seconds
- *
- * Final consistency mechanism:
- * - Orders created but not paid within 15 minutes are automatically cancelled
- * - Inventory is restored via DB atomic UPDATE
- * - This ensures stock is never lost even if payment fails silently
+ * 定时任务：每60秒检查并取消超时未支付的订单。
  */
 @Slf4j
 @Component

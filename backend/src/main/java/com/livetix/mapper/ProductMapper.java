@@ -20,11 +20,7 @@ import java.util.Map;
 public interface ProductMapper extends BaseMapper<Product> {
 
     /**
-     * 批量增量更新浏览量
-     * 使用 ON DUPLICATE KEY UPDATE 实现原子累加，避免 READ + WRITE 并发覆盖
-     *
-     * 面试点：MySQL 的 INSERT ... ON DUPLICATE KEY UPDATE 在批量场景下
-     * 比逐条 UPDATE 效率高 N 倍，且是原子操作，无并发问题
+     * 批量增量更新浏览量，ON DUPLICATE KEY UPDATE 原子累加
      */
     @Update("<script>" +
         "INSERT INTO t_product (id, view_count) VALUES " +

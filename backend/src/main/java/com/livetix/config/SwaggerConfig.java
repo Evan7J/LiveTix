@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 /**
- * 1: SpringDoc OpenAPI 配置 — Swagger UI 接口文档
+ * SpringDoc OpenAPI 配置，Swagger UI 接口文档
  * 访问地址: http://localhost:8080/swagger-ui.html
  */
 @Configuration
@@ -23,19 +23,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("LiveTix API — 演唱会票务秒杀系统")
                         .version("1.0.0")
-                        .description("""
-                                ## 模块
-                                - **Public API**: 无需登录（演出列表/详情/搜索/注册/登录）
-                                - **User API**: 需登录（下单/支付/退票/收藏/实名/钱包）
-                                - **Admin API**: 需管理员角色（演出管理/订单管理/退款审核/财务）
-
-                                ## 高并发特性
-                                - Lua 原子令牌桶限流
-                                - Redis 库存预热 + Lua 原子扣减
-                                - RocketMQ 异步下单削峰
-                                - Redis SET NX 防重锁
-                                - DB 乐观锁最终防线
-                                """)
+                        .description("LiveTix 演唱会票务系统 API 文档，包含公开接口、用户接口和管理员接口")
                         .contact(new Contact().name("LiveTix Team").email("admin@livetix.com"))
                         .license(new License().name("MIT")))
                 .servers(List.of(

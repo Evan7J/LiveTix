@@ -12,7 +12,7 @@ import java.util.Map;
 public interface CategoryMapper extends BaseMapper<Category> {
 
     /**
-     * 26: 批量更新排序 — 单条 CASE WHEN SQL 替代 N 次 selectById + updateById
+     * 批量更新排序，单条 CASE WHEN SQL
      */
     @Update("<script>" +
         "UPDATE t_category SET sort = CASE id " +

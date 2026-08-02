@@ -20,7 +20,6 @@ spring:
     url: jdbc:mysql://localhost:3306/livetix?useUnicode=true&characterEncoding=UTF-8&characterSetResults=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:hy2869956376}
-    # P0-5: Hikari 连接池扩容 — 20→100，支撑秒杀并发
     hikari:
       minimum-idle: 20
       maximum-pool-size: 100
@@ -36,7 +35,6 @@ spring:
       password:
       database: 0
       timeout: 5000ms
-      # P0-5: Lettuce 连接池扩容 — 16→64，支撑限流/锁/缓存/库存共用
       lettuce:
         pool:
           max-active: 64
@@ -74,7 +72,7 @@ mybatis-plus:
 sa-token:
   token-name: Authorization
   timeout: 604800       # 7 days (seconds)
-  active-timeout: 1800  # 55 修复: 30min 无操作自动下线（防 token 被盗后长期利用）
+  active-timeout: 1800  # 30分钟无操作自动下线
   is-concurrent: true
   is-share: false
   token-style: uuid
@@ -99,7 +97,6 @@ management:
         include: health,info
   endpoint:
     health:
-      # 30 修复: 生产环境改为 never，避免泄露 DB/Redis 连接信息
       show-details: ${HEALTH_DETAILS:never}
 
 # AES encryption keys (override via environment variables in production)
@@ -123,7 +120,6 @@ livetix:
   order:
     # 订单支付超时时间（分钟），默认15分钟
     timeout-minutes: 15
-    # P0-5: Redis 分布式锁超时延长至 30s（兜底用，核心并发防线为 DB 乐观锁）
     lock-timeout-seconds: 30
     # 超时订单取消批次大小（每次最多处理N条）
     cancel-batch-size: 100

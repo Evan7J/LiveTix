@@ -47,8 +47,7 @@ public class UploadController {
         }
 
         try {
-            // 28 修复: 用魔术数字（文件头）校验真实类型，替代可伪造的 Content-Type
-            byte[] header = new byte[8];
+                        byte[] header = new byte[8];
             file.getInputStream().read(header);
 
             String allowedExt = validateMagicNumber(header);
@@ -71,7 +70,7 @@ public class UploadController {
             Path uploadPath = basePath.resolve(dateDir);
             Files.createDirectories(uploadPath);
 
-            // 28: 只使用魔术数字验证的安全扩展名，不信任客户端原始扩展名
+            // 使用验证后的安全扩展名
             String fileName = UUID.randomUUID().toString().replace("-", "") + "." + allowedExt;
             Path filePath = uploadPath.resolve(fileName);
 
@@ -91,7 +90,7 @@ public class UploadController {
     }
 
     /**
-     * 28: 通过文件头魔术数字验证真实文件类型
+     * 通过文件头魔术数字验证真实文件类型
      * @return 安全扩展名（不含点），null 表示类型不支持
      */
     private String validateMagicNumber(byte[] header) {

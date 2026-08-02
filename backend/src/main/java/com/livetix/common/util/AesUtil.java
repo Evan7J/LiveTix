@@ -10,21 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 /**
- * AES 对称加密工具类（Spring Bean，密钥从配置文件注入）
- *
- * 用途：对敏感信息（如身份证号码）进行加密存储，查询时自动解密。
- *
- * 加密算法：AES-256-CBC + PKCS5Padding
- *   - 密钥长度：256 bit（32字节）
- *   - 分组模式：CBC（需要初始化向量 IV）
- *   - 填充模式：PKCS5Padding
- *   - 编码方式：Base64
- *
- * 安全说明：
- *   密钥通过 @Value 从 application.yml 注入，生产环境通过环境变量覆盖：
- *     export AES_SECRET_KEY="your-32-byte-key"
- *     export AES_IV="your-16-byte-iv"
- *   默认值仅用于开发环境，生产部署时必须更换密钥。
+ * AES 加密工具类，用于加密存储敏感信息（如身份证号）。
  */
 @Component
 public class AesUtil {

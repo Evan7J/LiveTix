@@ -36,8 +36,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 订单服务实现 — 核心下单逻辑
- * 防超卖方案：Redis Lua 预扣 → RocketMQ 异步落库 → DB 乐观锁兜底
+ * 订单服务实现
  */
 @Slf4j
 @Service
@@ -59,8 +58,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final UserMapper userMapper;
 
     /**
-     * RocketMQ 可选依赖：未配置 name-server 时此 bean 不存在，orderMessageProducer 为 null
-     * 此时下单降级为同步落库路径
+     * RocketMQ 可选依赖，未配置时走同步落库
      */
     @Autowired(required = false)
     private OrderMessageProducer orderMessageProducer;
@@ -100,7 +98,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         String ticketType = dto.getTicketType();
         int quantity = dto.getQuantity();
 
-        // 1. 请求级幂等
+        // 防重复提交
         if (dto.getRequestId() != null && !dto.getRequestId().isBlank()) {
             String idempotentKey = "livetix:idempotent:" + dto.getRequestId();
             Boolean idempotent = redisTemplate.opsForValue()
@@ -110,12 +108,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             }
         }
 
-        // 2. 令牌桶限流
+        // 限流
         if (!acquireRushTokenAtomic()) {
             return Result.fail("当前抢票人数过多，请稍后再试");
         }
 
-        // 3. 用户防重
+        // 防重复下单
         String userLockKey = USER_ORDER_LOCK_KEY + userId + ":" + showId;
         Boolean userLocked = redisTemplate.opsForValue()
                 .setIfAbsent(userLockKey, "1", USER_ORDER_LOCK_TTL, TimeUnit.SECONDS);
@@ -123,7 +121,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return Result.fail("请勿重复提交订单");
         }
 
-        // 4. 校验演出
+        // 校验演出信息
         Show show = getShowFromCache(showId);
         if (show == null) {
             redisTemplate.delete(userLockKey);
@@ -168,7 +166,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return Result.fail("您有未支付订单，请先完成或取消后再下单");
         }
 
-        // 5. Lua 原子预扣 Redis 库存
+        // 预扣 Redis 库存
         String stockKey = STOCK_PRE_KEY + showId;
         Long remaining = redisTemplate.execute(
                 stockDeductScript,
@@ -182,7 +180,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         evictShowCache(showId);
 
-        // 6. 发送 RocketMQ 消息异步落库
+        // 通过消息队列异步落库
         String preLockKey = stockKey + ":" + userId + ":" + System.currentTimeMillis();
         if (orderMessageProducer != null) {
             if (dto.getRequestId() == null || dto.getRequestId().isBlank()) {
@@ -196,7 +194,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                     "requestId", dto.getRequestId()));
         }
 
-        // 降级路径：MQ 不可用 → 同步落库
+        // MQ 不可用时同步落库
         try {
             Result<?> result = createOrderAsync(userId, dto, preLockKey);
             if (result.getData() instanceof Order order) {
@@ -553,7 +551,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return Result.ok("取消成功");
     }
 
-    // ==================== 内部工具方法 ====================
+    // ==================== 工具方法 ====================
 
     private boolean acquireRushTokenAtomic() {
         try {
@@ -600,9 +598,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 清除演出相关缓存（库存变更后调用）
-     * 直接删除缓存，下次请求时由 ShowServiceImpl 的互斥锁机制重建，防止缓存击穿
-     */
+     * 清除演出相关缓存（库存变更后调用）     */
     private void evictShowCache(Long showId) {
         redisTemplate.delete(RedisKey.SHOW_DETAIL + showId);
         redisTemplate.delete(RedisKey.SHOW_STOCK + showId);

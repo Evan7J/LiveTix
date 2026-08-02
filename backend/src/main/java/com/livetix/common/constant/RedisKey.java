@@ -32,16 +32,16 @@ public interface RedisKey {
     /** Product detail cache: product:{id} */
     String PRODUCT_DETAIL = "livetix:product:";
 
-    /** P0-6: 缓存击穿互斥锁前缀: mutex:{cacheKey} */
+    /** 缓存击穿互斥锁 */
     String CACHE_MUTEX = "livetix:mutex:";
 
-    /** P0-3: 用户下单防重锁: user:order:lock:{userId}:{showId} */
+    /** 用户下单锁 */
     String USER_ORDER_LOCK = "livetix:user:order:lock:";
 
-    /** P0-3: 支付防重锁: pay:lock:{orderNo} */
+    /** 支付锁 */
     String PAY_LOCK = "livetix:pay:lock:";
 
-    /** MQ 异步下单结果: order:result:{userId}:{requestId} → "OK:{orderId}" / "FAIL:{原因}" */
+    /** 异步下单结果 */
     String ORDER_RESULT = "livetix:order:result:";
 
     /** Method-level cache TTL (seconds) */

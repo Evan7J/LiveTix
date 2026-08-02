@@ -18,12 +18,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * P1-2: RocketMQ 异步下单消费者
- * P1-3: 延迟订单取消消费者
- *
- * M1 修复: 消费失败时回滚 Redis 预扣库存 + 释放用户防重锁
- * M2 修复: 同 OrderMessageProducer — @ConditionalOnBean 评估时机早于 auto-configuration，
- *          改用 @ConditionalOnProperty
+ * RocketMQ 异步下单消费者，处理订单创建和延迟取消消息。
  */
 @Slf4j
 @Component
@@ -115,9 +110,7 @@ public class OrderMessageConsumer {
         }
     }
 
-    /**
-     * M1: 回滚 Redis 预扣库存 + 释放用户防重锁
-     */
+    /** 回滚预扣库存并释放用户下单锁 */
     private void rollbackRedisStock(Long showId, int quantity, Long userId) {
         try {
             if (showId != null && quantity > 0) {

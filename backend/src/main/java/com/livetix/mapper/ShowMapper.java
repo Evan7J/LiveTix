@@ -18,8 +18,8 @@ public interface ShowMapper extends BaseMapper<Show> {
     int deductStock(@Param("showId") Long showId, @Param("quantity") int quantity);
 
     /**
-     * P0-5: 安全库存恢复 — 带 total_stock 上限校验
-     * 防止并发取消/定时任务导致库存数超过总库存
+     * 安全库存恢复 — 带 total_stock 上限校验
+     * 
      */
     @Update("UPDATE t_show SET available_stock = available_stock + #{quantity} " +
             "WHERE id = #{showId} AND available_stock + #{quantity} <= total_stock")
@@ -27,7 +27,6 @@ public interface ShowMapper extends BaseMapper<Show> {
 
     /**
      * Restore stock on order cancel (legacy — no upper bound check)
-     * @deprecated 推荐使用 {@link #restoreStockSafe(Long, int)} 避免库存超量恢复
      */
     @Deprecated
     @Update("UPDATE t_show SET available_stock = available_stock + #{quantity} WHERE id = #{showId}")
@@ -70,7 +69,7 @@ public interface ShowMapper extends BaseMapper<Show> {
 
     /**
      * Count shows with same filters (for pagination total)
-     * 47 修复: @Select 注解正确放置在方法上面
+     * @Select 注解正确放置在方法上面
      */
     @org.apache.ibatis.annotations.Select("<script>" +
         "SELECT COUNT(*) FROM t_show s " +

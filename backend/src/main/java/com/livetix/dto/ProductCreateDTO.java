@@ -8,12 +8,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * 商品发布/编辑请求DTO
- *
- * 安全设计：
- *   1. 只暴露允许用户填写的字段，防止客户端注入 userId/status/viewCount 等敏感字段
- *   2. 使用 @Valid 校验必填项和长度限制
- *   3. 后端从 Sa-Token 获取当前登录用户ID，不信任客户端传入的 userId
+ * 商品发布/编辑请求DTO，只包含允许用户填写的字段。
  */
 @Data
 public class ProductCreateDTO {

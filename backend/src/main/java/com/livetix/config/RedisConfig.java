@@ -16,12 +16,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
- * Redis 配置
- *
- * 修复说明：
- * 1. 手动配置 ObjectMapper 并注册 JavaTimeModule，解决 LocalDateTime 序列化问题
- * 2. 使用 GenericJackson2JsonRedisSerializer 包装自定义 ObjectMapper
- * 3. 禁用 WRITE_DATES_AS_TIMESTAMPS，确保日期以 ISO-8601 字符串格式存储
+ * Redis 序列化配置，注册 JavaTimeModule 以支持 LocalDateTime 等时间类型。
  */
 @Configuration
 public class RedisConfig {
@@ -31,17 +26,12 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
-        // ============================================================
-        // 关键修复：手动创建 ObjectMapper 并注册 JavaTimeModule
-        // 解决 LocalDateTime / LocalDate / LocalTime 序列化失败问题
-        // ============================================================
+        // 自定义 ObjectMapper，注册 JavaTimeModule 处理时间类型序列化
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // Redis 序列化 — 使用宽松验证器
-        // 安全说明: Redis 应配置为仅本地访问(127.0.0.1)，并设置密码
-        // Jackson DefaultTyping 用于对象多态序列化，类型校验由网络层保证
+        // 使用宽松验证器启用 DefaultTyping，支持对象多态序列化
         objectMapper.activateDefaultTyping(
             LaissezFaireSubTypeValidator.instance,
             ObjectMapper.DefaultTyping.NON_FINAL,

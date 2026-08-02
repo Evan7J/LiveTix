@@ -438,17 +438,15 @@ CREATE TABLE `t_admin_role_permission` (
 -- Initialize Seed Data
 -- ============================================
 
--- 51 修复: 默认管理员账号 — 首次登录后务必修改密码
---        用户名: admin，默认密码不记录在此文件中
+-- 默认管理员账号 — 用户名: admin，密码: admin123
 INSERT INTO `t_user` (`username`, `password`, `nickname`, `role`, `status`, `member_level`, `balance`, `points`)
-VALUES ('admin', '$2a$10$kuWpHvYtKI0umj99TnTuA.p0w9eYvWrF98t65LtvpJFjlqtCYXTOa', '系统管理员', 'admin', 1, 3, 0.00, 0);
+VALUES ('admin', '$2b$12$cz2gMYDnIAFR0GouIsUxbOCLUQ8cU/ptiZo/f9gpmAsFsuPxZMwoS', '系统管理员', 'admin', 1, 3, 0.00, 0);
 
--- 57 修复: 测试用户余额设为 0（防止生产环境误用泄漏的测试账号刷票）
--- Insert a test user (密码不在此注释中记录)
+-- 测试用户
 INSERT INTO `t_user` (`username`, `password`, `nickname`, `role`, `status`, `member_level`, `balance`, `points`)
 VALUES ('testuser', '$2a$10$0fnp58mBdjvZ1eyjuGEo..60mLOtbDYccnfm.aECAnX3GIV4UzjqW', '测试用户', 'user', 1, 1, 0.00, 0);
 
--- Insert categories (演出分类)
+-- 演出分类
 INSERT INTO `t_category` (`name`, `icon`, `sort`) VALUES
 ('演唱会', '/icons/concert.svg', 1),
 ('音乐节', '/icons/festival.svg', 2),
@@ -456,18 +454,6 @@ INSERT INTO `t_category` (`name`, `icon`, `sort`) VALUES
 ('体育赛事', '/icons/sports.svg', 4),
 ('儿童亲子', '/icons/kids.svg', 5),
 ('展览展会', '/icons/exhibition.svg', 6);
-
--- Insert categories (校园闲置交易分类)
-INSERT INTO `t_category` (`name`, `icon`, `sort`) VALUES
-('电子产品', '/icons/electronics.svg', 10),
-('书籍教材', '/icons/books.svg', 11),
-('生活用品', '/icons/daily.svg', 12),
-('服饰鞋包', '/icons/fashion.svg', 13),
-('运动户外', '/icons/sports.svg', 14),
-('文具办公', '/icons/stationery.svg', 15),
-('数码配件', '/icons/digital.svg', 16),
-('其他', '/icons/other.svg', 17)
-ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 -- Insert venues
 INSERT INTO `t_venue` (`name`, `city`, `address`, `total_seats`) VALUES

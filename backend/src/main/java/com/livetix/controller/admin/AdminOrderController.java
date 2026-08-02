@@ -18,9 +18,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Admin: Order management
- *
- * 16 修复: refund 加 @Transactional + 退钱到钱包 + use restoreStockSafe + 记流水 + 发通知
+ * 后台订单管理接口，包括列表查询和退款操作。
  */
 @RestController
 @RequestMapping("/api/admin/orders")
@@ -58,7 +56,7 @@ public class AdminOrderController {
     }
 
     /**
-     * 16 修复: 管理员退款 — @Transactional + 原子退钱 + 安全恢复库存 + 流水 + 通知
+     * 管理员退款，恢复库存并退款到用户余额。
      */
     @PutMapping("/{id}/refund")
     @Transactional(rollbackFor = Exception.class)
@@ -76,7 +74,7 @@ public class AdminOrderController {
         order.setRefundTime(LocalDateTime.now());
         orderService.updateById(order);
 
-        // ② 安全恢复库存（用 restoreStockSafe，避免超量恢复）+ 回补 Redis 预热池
+        // 恢复库存并回补 Redis 缓存
         int restored = showMapper.restoreStockSafe(order.getShowId(), order.getQuantity());
         if (restored > 0) {
             stockPreloadService.restorePreloadStock(order.getShowId(), order.getQuantity());

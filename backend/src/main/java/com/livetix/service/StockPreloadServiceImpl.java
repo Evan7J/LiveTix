@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Redis 库存预热服务实现
+ * 库存缓存服务，将库存数据加载到 Redis 提升查询性能。
  */
 @Slf4j
 @Service

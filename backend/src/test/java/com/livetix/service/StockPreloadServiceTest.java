@@ -16,7 +16,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("StockPreloadService — 库存预热测试")
+@DisplayName("StockPreloadService 库存缓存测试")
 class StockPreloadServiceTest {
 
     @Mock private RedisTemplate<String, Object> redisTemplate;
@@ -27,7 +27,7 @@ class StockPreloadServiceTest {
     private StockPreloadService stockPreloadService;
 
     @Test
-    @DisplayName("预热成功")
+    @DisplayName("缓存成功")
     void testPreloadStock_Success() {
         Show show = new Show(); show.setId(1L); show.setAvailableStock(500);
         when(showMapper.selectById(1L)).thenReturn(show);

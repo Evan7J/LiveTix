@@ -17,10 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Sa-Token permission & role loader with DB-backed RBAC.
- *
- * 20 修复: 支持 admin / operator / finance / cs 四种角色
- * 21 修复: 权限列表缓存到 Redis（5分钟TTL），避免每次请求 4 次 DB
+ * 加载用户的角色和权限列表，供 Sa-Token 鉴权使用。
  */
 @Component
 @RequiredArgsConstructor
@@ -32,7 +29,7 @@ public class StpInterfaceImpl implements StpInterface {
     private final AdminPermissionMapper permissionMapper;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    /** 20: 所有受支持的后台管理角色 */
+    /** 后台管理角色 */
     private static final Set<String> ADMIN_ROLES = Set.of("admin", "operator", "finance", "cs");
     private static final String PERM_CACHE_KEY = "livetix:perm:";
 
@@ -41,7 +38,7 @@ public class StpInterfaceImpl implements StpInterface {
         long userId = Long.parseLong(loginId.toString());
         String cacheKey = PERM_CACHE_KEY + userId;
 
-        // 21: 从 Redis 缓存读取权限
+        // 从 Redis 缓存读取权限
         @SuppressWarnings("unchecked")
         List<String> cached = (List<String>) redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
@@ -52,11 +49,9 @@ public class StpInterfaceImpl implements StpInterface {
         User user = userMapper.selectById(userId);
         if (user == null) return permissions;
 
-        String role = user.getRole();
-        // 20: 修复 — 所有后台管理角色都有通配符权限
-        if (ADMIN_ROLES.contains(role)) {
+        String role = user.getRole();        if (ADMIN_ROLES.contains(role)) {
             permissions.add("*");
-            // 21: 缓存
+            // 缓存
             redisTemplate.opsForValue().set(cacheKey, permissions, 5, TimeUnit.MINUTES);
             return permissions;
         }
@@ -84,7 +79,7 @@ public class StpInterfaceImpl implements StpInterface {
             permissions.add("user:profile");
         }
 
-        // 21: 缓存权限列表
+        // 缓存权限列表
         redisTemplate.opsForValue().set(cacheKey, permissions, 5, TimeUnit.MINUTES);
 
         return permissions;

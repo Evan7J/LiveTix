@@ -19,10 +19,7 @@ public class OrderCreateDTO {
     @Min(value = 1, message = "购买数量至少为1")
     private Integer quantity;
 
-    /**
-     * 5: 请求幂等性标识 — 前端生成 UUID，后端 Redis SET NX 校验
-     * 同一 requestId 5 分钟内只处理一次
-     */
+    /** 请求去重标识，同一 requestId 5 分钟内只处理一次 */
     private String requestId;
 
     private String remark;        // optional

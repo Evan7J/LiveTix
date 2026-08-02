@@ -48,12 +48,12 @@ public class AdminShowController {
     }
 
     /**
-     * 逻辑删除后清除 Redis 缓存
+     * 逻辑删除演出
      */
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable Long id) {
         showService.removeById(id);
-        // 27: 通过 saveOrUpdateShow 触发 clearShowCache（会清理该 ID 相关的缓存 key）
+        // 清理缓存
         com.livetix.entity.Show stub = new com.livetix.entity.Show();
         stub.setId(id);
         stub.setDeleted(1);
@@ -61,11 +61,10 @@ public class AdminShowController {
         return Result.ok("删除成功");
     }
 
-    // ==================== P1-5: 秒杀库存预热 ====================
+    // ==================== 库存预热 ====================
 
     /**
-     * 秒杀前预热单场演出库存到 Redis
-     * POST /api/admin/shows/{id}/preload-stock
+     * 预热单场演出库存到 Redis
      */
     @PostMapping("/{id}/preload-stock")
     public Result<?> preloadStock(@PathVariable Long id) {
@@ -84,13 +83,13 @@ public class AdminShowController {
         return Result.ok("库存预热完成", Map.of("preloadedShows", count));
     }
 
-    /** 查看某演出当前 Redis 预热库存（-1 表示未预热） */
+    /** 查看某演出当前 Redis 预热库存 */
     @GetMapping("/{id}/preload-stock")
     public Result<?> getPreloadStock(@PathVariable Long id) {
         return Result.ok(Map.of("showId", id, "redisStock", stockPreloadService.getPreloadStock(id)));
     }
 
-    /** 活动结束后清除 Redis 预热库存 */
+    /** 清除 Redis 预热库存 */
     @DeleteMapping("/{id}/preload-stock")
     public Result<?> clearPreloadStock(@PathVariable Long id) {
         stockPreloadService.clearPreloadStock(id);

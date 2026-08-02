@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 选座锁定服务实现 — Redis SET NX 细粒度锁
+ * 选座锁定服务，基于 Redis 实现座位锁定。
  */
 @Slf4j
 @Service

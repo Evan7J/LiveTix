@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * 9: MDC TraceId 过滤器 — 全链路日志追踪
- * 每个请求自动生成 traceId 放入 MDC，日志中通过 %X{traceId} 输出
+ * 为每个请求生成 traceId 并放入日志上下文，方便排查问题。
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)

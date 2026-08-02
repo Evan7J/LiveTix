@@ -36,19 +36,18 @@ public class OperationLogAspect {
     }
 
     private void log(String module, String action, JoinPoint jp, Long targetId) {
-        // 52 修复: 敏感参数脱敏后再记录到日志
-        String detail = jp.getSignature().toShortString() + " " + maskArgs(jp.getArgs());
+                String detail = jp.getSignature().toShortString() + " " + maskArgs(jp.getArgs());
         String ip = getClientIp();
         adminLogService.record(module, action, targetId, detail, ip);
     }
 
     /**
-     * 52: 对敏感字段脱敏 — password/idNumber/phone 等替换为 ***
+     * 隐藏参数中的敏感信息。
      */
     private String maskArgs(Object[] args) {
         if (args == null || args.length == 0) return "[]";
         String raw = Arrays.toString(args);
-        // 脱敏常见敏感字段
+        // 隐藏密码、身份证、手机号等敏感信息
         return raw
             .replaceAll("\"password\"\\s*:\\s*\"[^\"]*\"", "\"password\":\"***\"")
             .replaceAll("\"oldPassword\"\\s*:\\s*\"[^\"]*\"", "\"oldPassword\":\"***\"")

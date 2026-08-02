@@ -68,7 +68,7 @@ public class AdminRoleController {
     }
 
     /**
-     * 25 修复: @Transactional + 批量插入（替代逐条insert）
+     * @Transactional + 批量插入（替代逐条insert）
      */
     @Transactional(rollbackFor = Exception.class)
     @PutMapping("/roles/{id}/permissions")
@@ -77,7 +77,7 @@ public class AdminRoleController {
         // Delete existing
         rolePermissionMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<AdminRolePermission>()
                 .eq(AdminRolePermission::getRoleId, id));
-        // 25: 批量插入
+        // 批量插入
         if (permIds != null && !permIds.isEmpty()) {
             List<AdminRolePermission> batch = new ArrayList<>();
             for (Long permId : permIds) {

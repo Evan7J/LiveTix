@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.nio.file.AccessDeniedException;
 
 /**
- * 4: 增强全局异常处理 — 覆盖常见业务异常
+ * 全局异常处理
  */
 @Slf4j
 @RestControllerAdvice
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
         return Result.badRequest(msg);
     }
 
-    // 4: 新增 — @Valid 校验失败
+    // @Valid 校验失败
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleValidation(MethodArgumentNotValidException e) {
@@ -78,21 +78,21 @@ public class GlobalExceptionHandler {
         return Result.badRequest(msg);
     }
 
-    // 4: 新增 — 请求体解析失败（JSON格式错误）
+    // 请求体解析失败
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleMessageNotReadable(HttpMessageNotReadableException e) {
         return Result.badRequest("请求格式错误，请检查JSON格式");
     }
 
-    // 4: 新增 — 缺少必需参数
+    // 缺少必需参数
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleMissingParam(MissingServletRequestParameterException e) {
         return Result.badRequest("缺少参数: " + e.getParameterName());
     }
 
-    // 4: 新增 — 非法参数
+    // 非法参数
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleIllegalArgument(IllegalArgumentException e) {

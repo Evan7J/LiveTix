@@ -26,21 +26,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 商品服务实现 — Redis 二级缓存 + 防穿透/击穿/雪崩
- *
- * 设计思路：
- *   1. 商品列表：不走缓存（查询条件组合太多，缓存命中率低），直接走 DB 关联查询
- *   2. 商品详情：走 Redis 缓存（高频访问 + 查询条件单一），TTL 30 分钟
- *   3. 浏览量：Redis 计数器 + 定时任务批量刷回 DB（5 分钟间隔）
- *   4. 缓存穿透防护：不存在的数据缓存空值 __NULL__，TTL 60 秒
- *   5. 缓存击穿防护：SET NX 互斥锁，只有一个线程去查库重建缓存
- *   6. 缓存雪崩防护：TTL 加随机抖动（80%~120%），避免同时过期
- *
- * 面试点：
- *   - 为什么列表不走缓存？因为查询条件多（分类/关键词/排序/分页），组合爆炸，
- *     缓存命中率极低，反而增加 Redis 内存压力和一致性维护成本
- *   - 为什么详情走缓存？商品详情页是最高频的访问入口，且 key 唯一（product:id），
- *     缓存命中率接近 100%，收益远大于成本
+ * 商品服务实现
+ * 商品列表直接查 DB，商品详情走 Redis 缓存，浏览量用 Redis 计数器定时刷回 DB。
  */
 @Slf4j
 @Service
@@ -59,7 +46,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     /** 浏览量刷库间隔：5 分钟 */
     private static final long VIEW_FLUSH_INTERVAL_MS = 5 * 60 * 1000;
 
-    /** 空值占位符，防止缓存穿透 */
+    /** 空值占位符， */
     private static final String NULL_PLACEHOLDER = "__NULL__";
 
     /** 空值缓存 TTL：60 秒 */
@@ -68,15 +55,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     /** 缓存击穿互斥锁前缀 */
     private static final String MUTEX_KEY = "livetix:mutex:product:";
 
-    /** 互斥锁 TTL：10 秒（防止死锁） */
+    /** 互斥锁 TTL：10 秒（） */
     private static final long MUTEX_TTL_SECONDS = 10;
 
     /** 分页最大值 */
     private static final int MAX_PAGE_SIZE = 50;
 
     /**
-     * 随机抖动 TTL（80%~120%），防止缓存雪崩
-     * 例如基础 TTL=300s，实际可能在 240s~360s 之间
+     * 在基础 TTL 上增加随机偏移，避免缓存集中过期。
      */
     private long jitteredTtl(long baseSeconds) {
         double jitter = 0.8 + ThreadLocalRandom.current().nextDouble() * 0.4;
@@ -84,19 +70,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 互斥锁重建缓存（防缓存击穿）
-     *
-     * 流程：
-     *   1. 尝试获取互斥锁（SET NX），拿到锁的线程去查库
-     *   2. 没拿到锁的线程 sleep 50~100ms 后重试读缓存
-     *   3. 如果缓存中已有数据（可能是其他线程重建的），直接返回
-     *   4. 如果缓存中仍是空，直接查库兜底
-     *
-     * @param mutexKey  互斥锁 Key
-     * @param cacheKey  缓存 Key
-     * @param baseTtl   基础 TTL（秒）
-     * @param dbSupplier 数据库查询函数
-     * @return 缓存或数据库中的数据
+     * 使用互斥锁重建缓存，避免缓存击穿。未拿到锁的线程等待后重试。
      */
     @SuppressWarnings("unchecked")
     private <T> T rebuildWithMutex(String mutexKey, String cacheKey, long baseTtl,
@@ -105,8 +79,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 .setIfAbsent(mutexKey, "1", MUTEX_TTL_SECONDS, TimeUnit.SECONDS);
         if (Boolean.TRUE.equals(locked)) {
             try {
-                // 双重检查：拿到锁后再次读缓存，防止重复查库
-                T doubleCheck = (T) redisTemplate.opsForValue().get(cacheKey);
+                                T doubleCheck = (T) redisTemplate.opsForValue().get(cacheKey);
                 if (doubleCheck != null) {
                     if (NULL_PLACEHOLDER.equals(doubleCheck)) return null;
                     return doubleCheck;
@@ -122,8 +95,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 return value;
             } catch (Exception e) {
                 log.error("重建缓存失败 key={}", cacheKey, e);
-                return dbSupplier.get(); // 异常时直接查库兜底
-            } finally {
+                return dbSupplier.get();             } finally {
                 redisTemplate.delete(mutexKey);
             }
         } else {
@@ -135,8 +107,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             }
             T retry = (T) redisTemplate.opsForValue().get(cacheKey);
             if (retry != null && !NULL_PLACEHOLDER.equals(retry)) return retry;
-            return dbSupplier.get(); // 兜底查库
-        }
+            return dbSupplier.get();         }
     }
 
     // ==================== 商品列表（公开接口） ====================
@@ -209,7 +180,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     /**
      * Redis 原子自增浏览量
-     * 首次递增时设置 24 小时过期，防止冷数据占用 Redis 内存
+     * 首次递增时设置 24 小时过期，
      */
     private Long incrementViewCount(Long productId) {
         try {
@@ -229,7 +200,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public Result<?> createProduct(Long userId, ProductCreateDTO dto) {
-        // DTO → Entity 转换（只复制允许的字段，防止注入敏感字段）
+        // DTO → Entity 转换（只复制允许的字段，）
         Product product = new Product();
         product.setTitle(dto.getTitle());
         product.setDescription(dto.getDescription());
@@ -260,7 +231,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (product == null) {
             return Result.fail("商品不存在");
         }
-        // 归属权校验：防止越权修改他人商品
+        // 归属权校验：
         if (!product.getUserId().equals(userId)) {
             return Result.fail("无权操作此商品");
         }
@@ -368,8 +339,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             String pattern = VIEW_COUNT_KEY + "*";
             List<Map<String, Object>> batchItems = new ArrayList<>();
 
-            // 使用 SCAN 命令避免 KEYS 阻塞 Redis
-            ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
+                        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
             try {
                 Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
                         .getConnection().scan(options);
@@ -396,8 +366,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                 }
                 cursor.close();
             } catch (Exception e) {
-                // SCAN 失败时降级使用 KEYS
-                log.warn("SCAN 失败，降级使用 KEYS", e);
+                // SCAN 失败时回退使用 KEYS
+                log.warn("SCAN 失败，回退使用 KEYS", e);
                 Set<String> keys = redisTemplate.keys(pattern);
                 if (keys != null && !keys.isEmpty()) {
                     for (String key : keys) {

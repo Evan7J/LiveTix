@@ -10,21 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 支付控制器
- *
- * ============================================================
- * 支付流程说明：
- * ============================================================
- * 1. 用户下单后，前端调用 /pay/{orderId}/prepare 获取支付参数
- * 2. 后端生成支付订单（微信/支付宝统一下单），返回支付链接/二维码参数
- * 3. 前端展示支付二维码，用户扫码支付
- * 4. 支付平台异步回调 /pay/callback 通知支付结果
- * 5. 后端验证签名后更新订单状态
- *
- * 当前阶段为模拟支付，预留真实对接接口。
- * 对接真实支付时只需：
- *   - 替换 createPayOrder 中的统一下单逻辑
- *   - 实现 verifyCallbackSign 中的签名验证
+ * 支付控制器，当前为模拟支付，预留真实对接接口
  */
 @RestController
 @RequestMapping("/api/user")
@@ -34,14 +20,7 @@ public class PaymentController {
     private final OrderService orderService;
 
     /**
-     * 生成支付订单
-     *
-     * POST /api/user/pay/{orderId}/prepare
-     * 返回支付参数（前端据此展示支付二维码或跳转支付页面）
-     *
-     * 生产环境对接示例：
-     *   - 微信支付：调用 JSAPI 统一下单接口，返回 prepay_id + 签名参数
-     *   - 支付宝：调用 alipay.trade.precreate，返回二维码链接
+     * 生成支付订单，返回支付参数供前端展示
      */
     @PostMapping("/pay/{orderId}/prepare")
     public Result<?> preparePay(@PathVariable Long orderId) {
@@ -64,7 +43,7 @@ public class PaymentController {
                 "orderNo", order.getOrderNo(),
                 "payAmount", order.getPayAmount(),
                 "payUrl", payUrl,
-                "qrCode", qrCode,  // 生产环境：微信 code_url 或支付宝 qr_code
+                "qrCode", qrCode,
                 "expireTime", order.getPayExpireTime() != null
                         ? order.getPayExpireTime().toString() : null
         );
@@ -73,12 +52,7 @@ public class PaymentController {
     }
 
     /**
-     * 执行支付（模拟）
-     *
-     * POST /api/user/pay/{orderId}/execute
-     *
-     * 当前直接标记支付成功。
-     * 生产环境此接口不需要存在——支付结果通过 /pay/callback 异步通知。
+     * 执行支付，模拟支付流程
      */
     @PostMapping("/pay/{orderId}/execute")
     public Result<?> executePay(@PathVariable Long orderId, @RequestBody Map<String, String> body) {
@@ -98,8 +72,5 @@ public class PaymentController {
         return orderService.processPayment(order.getOrderNo(), payMethod);
     }
 
-    // 支付回调已移至 PublicController（实际路径：/api/public/pay/callback）
-    // 此 Controller 的路由基路径为 /api/user，其下的 /public/pay/callback
-    // 实际路径为 /api/user/public/pay/callback，不符合支付平台的回调预期。
-    // 新的正确回调路径：POST /api/public/pay/callback（在 PublicController 中处理）
+    // 支付回调已移至 PublicController
 }

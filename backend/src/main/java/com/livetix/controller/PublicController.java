@@ -33,15 +33,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Public APIs — no login required
- *
- * ============================================================
- * 安全加固：
- *   1. 登录接口添加 Redis 滑动窗口限流
- *   2. 支付回调添加签名验证 + 金额校验
- *   3. 注册接口使用 RegisterDTO 隔离敏感字段
- *   4. 分页参数上限校验
- * ============================================================
+ * 公开接口，无需登录
  */
 @RestController
 @RequestMapping("/api/public")
@@ -64,13 +56,11 @@ public class PublicController {
 
     private final ProductService productService;
 
-    /** 支付回调签名密钥（生产环境从配置中心读取） */
+    /** 支付回调签名密钥 */
     @Value("${payment.callback-secret:livetix_pay_callback_secret_2026}")
     private String callbackSecret;
 
-    /** 登录限流：每分钟最大尝试次数 */
     private static final int LOGIN_RATE_LIMIT = 5;
-    /** 限流窗口大小（秒）*/
     private static final long RATE_LIMIT_WINDOW_SECONDS = 60;
     /** 分页最大值 */
     private static final int MAX_PAGE_SIZE = 100;
@@ -82,10 +72,7 @@ public class PublicController {
     // ==================== Auth ====================
 
     /**
-     * 用户登录
-     * 安全措施：
-     *   - 滑动窗口限流（IP + 用户名双维度）
-     *   - 统一返回"用户名或密码错误"，防止撞库攻击枚举有效用户名
+     * 用户登录，通过 IP 和用户名双维度限流
      */
     @PostMapping("/login")
     public Result<?> login(@Valid @RequestBody LoginDTO dto, HttpServletRequest request) {
@@ -114,16 +101,9 @@ public class PublicController {
         return result;
     }
 
-    /**
-     * 用户注册
-     * 安全措施：使用 RegisterDTO 隔离敏感字段，后端强制设置 role='user'
-     */
-    /**
-     * 41 修复: 注册接口加 IP 限流 — 每小时最多 3 次注册
-     */
     @PostMapping("/register")
     public Result<?> register(@Valid @RequestBody RegisterDTO dto, jakarta.servlet.http.HttpServletRequest request) {
-        // 41: IP 限流 — 每小时每个 IP 最多注册 3 次
+        // 注册限流：每小时每个 IP 最多 3 次
         String ip = getClientIp(request);
         String regLimitKey = "livetix:reg:limit:" + ip;
         Long regCount = redisTemplate.opsForValue().increment(regLimitKey);
@@ -158,13 +138,6 @@ public class PublicController {
         return userService.register(user);
     }
 
-    /**
-     * 发送验证码
-     * 将验证码存储到 Redis，TTL 5分钟
-     */
-    /**
-     * 42 修复: 发送验证码 — IP限流 + 目标限流 + 发送间隔
-     */
     @PostMapping("/send-code")
     public Result<?> sendVerifyCode(@RequestBody Map<String, String> body,
                                     jakarta.servlet.http.HttpServletRequest request) {
@@ -176,7 +149,7 @@ public class PublicController {
 
         String ip = getClientIp(request);
 
-        // 42: IP 限流 — 每小时每个 IP 最多 10 次发码
+        // IP 限流：每小时每个 IP 最多 10 次
         String ipLimitKey = "livetix:code:ip:" + ip;
         Long ipCount = redisTemplate.opsForValue().increment(ipLimitKey);
         if (ipCount != null && ipCount == 1) redisTemplate.expire(ipLimitKey, 1, TimeUnit.HOURS);
@@ -184,7 +157,7 @@ public class PublicController {
             return Result.fail("发送过于频繁，请稍后再试");
         }
 
-        // 42: 目标限流 — 同一手机号/邮箱 60s 内只能发一次
+        // 同一手机号/邮箱 60s 内只能发一次
         String intervalKey = "livetix:code:interval:" + target;
         Boolean hasInterval = redisTemplate.hasKey(intervalKey);
         if (Boolean.TRUE.equals(hasInterval)) {
@@ -197,11 +170,10 @@ public class PublicController {
 
         // 存储验证码，5分钟过期
         redisTemplate.opsForValue().set(codeKey, code, 5, TimeUnit.MINUTES);
-        // 42: 设置发送间隔标记，60s
+        // 发送间隔标记，60s
         redisTemplate.opsForValue().set(intervalKey, "1", 60, TimeUnit.SECONDS);
 
-        // TODO: 集成短信/邮件服务发送真实验证码
-        System.out.println("========================================");
+                System.out.println("========================================");
         System.out.println("  验证码 [" + target + "]: " + code);
         System.out.println("========================================");
 
@@ -274,8 +246,7 @@ public class PublicController {
             @RequestParam(required = false) String timeRange,
             @RequestParam(required = false) String date,
             @RequestParam(required = false) String sort) {
-        // 安全加固：分页大小上限校验，防止内存溢出攻击
-        if (pageSize > MAX_PAGE_SIZE) {
+                if (pageSize > MAX_PAGE_SIZE) {
             pageSize = MAX_PAGE_SIZE;
         }
         if (page < 1) {
@@ -305,12 +276,9 @@ public class PublicController {
      * 获取指定演出的已售座位坐标列表
      * 返回的坐标格式为 "r-c"（行-列），与管理员设置的 cells 数据格式一致
      */
-    /**
-     * 38 修复: 已售座位缓存 + 分页限制，避免全表扫描
-     */
     @GetMapping("/shows/{id}/sold-cells")
     public Result<?> soldCells(@PathVariable Long id) {
-        // 38: 先从 Redis 缓存读取（TTL 30s，减少 DB 查询频率）
+        // 从缓存读取已售座位，TTL 30s
         String cacheKey = "livetix:sold:cells:" + id;
         @SuppressWarnings("unchecked")
         java.util.List<String> cached = (java.util.List<String>) redisTemplate.opsForValue().get(cacheKey);
@@ -318,7 +286,7 @@ public class PublicController {
             return Result.ok(cached);
         }
 
-        // 38: 加 LIMIT 200 防止大结果集，用 last("LIMIT 200") 限制返回
+        // 限制最多返回 200 条
         List<Order> orders = orderMapper.selectList(
                 new LambdaQueryWrapper<Order>()
                         .eq(Order::getShowId, id)
@@ -340,7 +308,7 @@ public class PublicController {
             }
         }
         List<String> result = List.copyOf(soldCells);
-        // 38: 缓存 30 秒，减轻 DB 压力
+        // 缓存 30 秒
         redisTemplate.opsForValue().set(cacheKey, result, 30, TimeUnit.SECONDS);
         return Result.ok(result);
     }
@@ -348,15 +316,7 @@ public class PublicController {
     // ==================== Payment Callback ====================
 
     /**
-     * 支付异步回调接口（由支付平台调用，无需认证）
-     *
-     * POST /api/public/pay/callback
-     *
-     * 安全措施：
-     *   1. 验证回调签名（防篡改）
-     *   2. 验证订单金额一致性（防金额篡改）
-     *   3. 幂等处理防止重复通知
-     *   4. IP白名单校验（生产环境启用）
+     * 支付异步回调接口，由支付平台调用，无需认证
      */
     @PostMapping("/pay/callback")
     public Result<?> payCallback(@RequestBody Map<String, String> params) {
@@ -414,17 +374,7 @@ public class PublicController {
     }
 
     /**
-     * 验证支付回调签名
-     *
-     * 签名算法（HMAC-SHA256）:
-     *   1. 除 sign 字段外的所有参数按 key 字典序排序
-     *   2. 拼接成 key1=value1&key2=value2 格式
-     *   3. 使用回调密钥进行 HMAC-SHA256 签名
-     *   4. 与传入的 sign 对比
-     *
-     * 对接微信支付时替换为：
-     *   - 微信: 使用微信提供的 SDK (WXPayUtility) 验证
-     *   - 支付宝: 使用 AlipaySignature.rsaCheckV1 验证
+     * 使用 HMAC-SHA256 验证回调签名
      */
     private boolean verifyCallbackSign(Map<String, String> params, String sign) {
         if (sign == null || sign.isBlank()) {
@@ -468,9 +418,6 @@ public class PublicController {
 
     // ==================== Rate Limiting Helpers ====================
 
-    /**
-     * 滑动窗口限流检查
-     */
     private boolean checkRateLimit(String redisKey) {
         try {
             long now = System.currentTimeMillis();
@@ -489,8 +436,7 @@ public class PublicController {
 
             return true;
         } catch (Exception e) {
-            // 37 修复: Redis 异常时拒绝请求（fail-closed），防止暴力破解
-            return false;
+                        return false;
         }
     }
 

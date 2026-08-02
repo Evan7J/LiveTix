@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * 注册请求DTO —— 仅包含注册必要字段，防止客户端注入 role/balance 等敏感字段
+ * 注册请求DTO —— 仅包含注册必要字段，
  */
 @Data
 public class RegisterDTO {

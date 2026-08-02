@@ -9,15 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 用户端商品控制器 — 校园闲置交易（需登录）
- *
- * 公开接口（商品列表、商品详情）在 PublicController 中，路径为 /api/public/products
- * 本控制器所有接口需要登录后才能访问
- *
- * 安全设计：
- *   1. 所有写操作从 Sa-Token 获取当前用户ID，不信任客户端传入的 userId
- *   2. 编辑/下架/上架/删除操作均校验商品归属权
- *   3. 发布时间使用 DTO 隔离，防止客户端注入敏感字段
+ * 用户端商品控制器，所有接口需登录后才能访问。
+ * 公开接口（商品列表、详情）在 PublicController 中。
  */
 @RestController
 @RequestMapping("/api/product")
@@ -30,13 +23,6 @@ public class ProductController {
 
     /**
      * 发布商品
-     *
-     * POST /api/product
-     *
-     * 安全措施：
-     *   - 使用 @Valid 校验必填字段
-     *   - 后端从 Sa-Token 获取用户ID，不信任客户端
-     *   - 强制设置 status=1（在售），防止客户端注入 status=2（已售）绕过交易
      */
     @PostMapping
     public Result<?> create(@Valid @RequestBody ProductCreateDTO dto) {

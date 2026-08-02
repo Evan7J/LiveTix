@@ -7,16 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 管理端商品控制器 — 后台商品管理
- *
- * 功能：
- *   1. 商品列表查询（全部商品，含已下架/已售）
- *   2. 强制修改商品状态（如违规下架）
- *   3. 强制删除商品
- *
- * 安全设计：
- *   这些接口需要在 SaTokenConfig 中配置 admin 角色权限校验，
- *   或通过网关层统一拦截 /api/admin/** 路径
+ * 管理端商品控制器，提供后台商品列表查询、状态修改和删除等管理功能。
  */
 @RestController
 @RequestMapping("/api/admin")

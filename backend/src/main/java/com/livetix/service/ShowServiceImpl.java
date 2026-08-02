@@ -29,8 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 演出服务实现 — 二级缓存（Redis + MySQL）
- * 缓存穿透/击穿/雪崩都有防护
+ * 演出服务实现，使用 Redis 缓存加速查询。
  */
 @Slf4j
 @Service

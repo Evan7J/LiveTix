@@ -50,11 +50,11 @@ public class AdminFinanceController {
     }
 
     /**
-     * 19 修复: 用 SQL 聚合替代 selectList(null) 全表加载到内存
+     * 用 SQL 聚合替代 selectList(null) 全表加载到内存
      */
     @GetMapping("/summary")
     public Result<?> summary() {
-        // 单条 SQL 聚合：SUM + GROUP BY type，避免全表加载 OOM
+        // 单条 SQL 聚合：SUM + GROUP BY type，
         String sql = "SELECT type, COALESCE(SUM(CASE WHEN type='purchase' THEN -amount ELSE amount END), 0) AS amount " +
                      "FROM t_wallet_transaction GROUP BY type";
         var rows = jdbcTemplate.queryForList(sql);

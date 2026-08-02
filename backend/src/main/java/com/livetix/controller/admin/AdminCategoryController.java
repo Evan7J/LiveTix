@@ -44,7 +44,7 @@ public class AdminCategoryController {
     }
 
     /**
-     * 26 修复: 一条 CASE WHEN SQL 替代 N 次 selectById + updateById
+     * 一条 CASE WHEN SQL 替代 N 次 selectById + updateById
      */
     @PutMapping("/categories/sort")
     public Result<?> sort(@RequestBody List<Map<String, Object>> items) {

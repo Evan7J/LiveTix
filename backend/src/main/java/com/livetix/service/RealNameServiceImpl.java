@@ -13,9 +13,7 @@ import org.springframework.stereotype.Service;
 /**
  * 实名信息服务
  *
- * 安全加固：证件号码 AES 加密存储
- * 存储流程：用户输入明文 → AES-256-CBC 加密 → Base64 编码 → 存入数据库
- * 读取流程：数据库密文 → Base64 解码 → AES-256-CBC 解密 → 脱敏显示
+ * 证件号码使用 AES 加密存储，查询时解密。
  */
 @Service
 public class RealNameServiceImpl extends ServiceImpl<RealNameInfoMapper, RealNameInfo> implements RealNameService {

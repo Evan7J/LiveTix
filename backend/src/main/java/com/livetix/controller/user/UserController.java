@@ -41,8 +41,7 @@ public class UserController {
     }
 
     /**
-     * 44 修复: 字段白名单 — 仅允许修改 nickname/avatar/gender/bio
-     * 防止用户越权修改 phone/email/password/status/balance 等敏感字段
+     * 修改个人信息，仅允许修改昵称、头像、性别、简介
      */
     @PutMapping("/profile")
     public Result<?> updateProfile(@RequestBody User user) {
@@ -83,7 +82,7 @@ public class UserController {
      *
      * 下单接口返回 pending=true 后，前端凭 requestId 轮询此接口，
      * 等待 MQ 消费者落库完成后拿到 orderId 再跳转支付页。
-     * Redis Key 中拼入 userId，防止跨用户探测他人下单结果。
+     * Redis Key 中拼入 userId，
      */
     @GetMapping("/orders/create-status")
     public Result<?> getOrderCreateStatus(@RequestParam String requestId) {
@@ -111,7 +110,7 @@ public class UserController {
     }
 
     /**
-     * 获取订单详情（带用户归属校验，防止ID枚举越权访问）
+     * 获取订单详情
      */
     @GetMapping("/orders/{id}")
     public Result<?> getOrderDetail(@PathVariable Long id) {
@@ -255,7 +254,7 @@ public class UserController {
     }
 
     /**
-     * 39 修复: 不存在的充值接口 — 生产环境删除或接入真实支付
+     * 不存在的充值接口 — 
      * 当前仅供管理员在后台使用，普通用户需走真实支付网关充值
      */
     @PostMapping("/wallet/recharge")

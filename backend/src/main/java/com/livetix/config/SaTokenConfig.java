@@ -8,12 +8,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Sa-Token RBAC configuration
- *
- * Route interception rules:
- *   /api/user/**   -> requires login
- *   /api/admin/**  -> requires login + admin role
- *   /api/public/** -> public, no login required
+ * 路由拦截配置，区分公开接口、用户接口和管理后台的访问权限。
  */
 @Configuration
 public class SaTokenConfig implements WebMvcConfigurer {
@@ -27,8 +22,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
                             .match("/api/public/**")
                             .stop();  // stop = no further checks
 
-                    // 20 修复: Admin routes — 允许 admin / operator / finance / cs 四种角色
-                    SaRouter
+                                        SaRouter
                             .match("/api/admin/**")
                             .check(r -> StpUtil.checkRoleOr("admin", "operator", "finance", "cs"));
 
@@ -51,6 +45,5 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/v3/api-docs/**",
                         "/swagger-ui/**"
                 );
-                // 30 修复: /actuator/** 不再被排除，需登录才能访问健康端点
-    }
+                    }
 }
