@@ -1,0 +1,273 @@
+// ============================================
+// LiveTix Premium — Black & Gold Luxury Theme
+// ============================================
+
+:root {
+  // Gold palette — refined
+  --gold-primary: #C8A45A;
+  --gold-light: #E8D098;
+  --gold-dark: #9B7A34;
+  --gold-gradient: linear-gradient(135deg, #C8A45A 0%, #E8D098 40%, #9B7A34 100%);
+  --gold-glow: 0 0 30px rgba(200, 164, 90, 0.15);
+
+  // Deep blacks
+  --bg-primary: #080808;
+  --bg-secondary: #0E0E0E;
+  --bg-card: #111111;
+  --bg-card-hover: #181818;
+  --bg-overlay: rgba(0, 0, 0, 0.85);
+  --bg-glass: rgba(17, 17, 17, 0.85);
+
+  // Text
+  --text-primary: #F5F0E6;
+  --text-secondary: #9D9588;
+  --text-muted: #5E5950;
+
+  // Borders
+  --border-color: #1F1F1F;
+  --border-gold: rgba(200, 164, 90, 0.25);
+  --border-gold-hover: rgba(200, 164, 90, 0.45);
+
+  // Spacing
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Premium scrollbar
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: #222; border-radius: 4px; border: 2px solid var(--bg-primary); }
+::-webkit-scrollbar-thumb:hover { background: #333; }
+
+a { color: var(--gold-primary); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--gold-light); }
+
+// ========== Utility Classes ==========
+.text-gold {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gold-solid { color: var(--gold-primary); }
+
+// ========== Gold Button ==========
+.btn-gold {
+  background: var(--gold-gradient) !important;
+  border: none !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  &:hover {
+    box-shadow: 0 8px 30px rgba(200, 164, 90, 0.35) !important;
+    transform: translateY(-2px);
+  }
+  &:active { transform: translateY(0); }
+  &:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+}
+
+.btn-gold-outline {
+  background: transparent !important;
+  border: 1px solid var(--gold-primary) !important;
+  color: var(--gold-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.3s !important;
+
+  &:hover {
+    background: rgba(200, 164, 90, 0.08) !important;
+    border-color: var(--gold-light) !important;
+    box-shadow: var(--gold-glow);
+  }
+}
+
+// ========== Premium Card ==========
+.card-dark {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-gold);
+    box-shadow: var(--gold-glow);
+  }
+}
+
+// ========== Glass Card ==========
+.card-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+// ========== Page ==========
+.page-container { min-height: 100vh; background: var(--bg-primary); }
+
+// ========== Toast 消息提示：屏幕正中间固定，不随滚动偏移，醒目 ==========
+// 强制所有 el-message 容器在视口绝对中心（覆盖 element-plus 默认）
+.el-message {
+  position: fixed !important;        // 脱离文档流，固定在视口
+  top: 30% !important;              // 视口上方 1/3 处，一眼就能看到
+  left: 50% !important;             // 水平居中
+  right: auto !important;
+  bottom: auto !important;
+  transform: translate(-50%, -50%) !important;  // 自身偏移居中
+  margin: 0 !important;
+  z-index: 99999 !important;
+  pointer-events: none;             // 容器本身不拦截点击（让用户可操作底层页面）
+}
+
+// 提示条内容区域可交互（关闭按钮、复制文字等）
+.el-message .el-message__content {
+  pointer-events: auto;
+}
+.el-message .el-message__closeBtn {
+  pointer-events: auto;
+}
+// 自定义 livetix-toast 视觉样式 — 黑金玻璃底，型别色只做左侧细条点缀
+.livetix-toast {
+  min-width: 360px !important;
+  max-width: 600px !important;
+  padding: 16px 26px 16px 30px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(255, 255, 255, .07) !important;
+  background: linear-gradient(160deg, rgba(26,26,24,.92) 0%, rgba(10,10,10,.96) 100%) !important;
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, .6),
+    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+  overflow: hidden !important;
+  color: var(--text-primary) !important;
+}
+// 左侧型别色条
+.livetix-toast::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.livetix-toast.el-message--error {
+  border-color: rgba(240, 112, 112, .22) !important;
+}
+.livetix-toast.el-message--error::before { background: linear-gradient(180deg, #F07070, #A84444); }
+.livetix-toast.el-message--error .el-message__icon { color: #F07070 !important; }
+
+.livetix-toast.el-message--success {
+  border-color: var(--border-gold) !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, .6),
+    var(--gold-glow),
+    inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+.livetix-toast.el-message--success::before { background: var(--gold-gradient); }
+.livetix-toast.el-message--success .el-message__icon { color: var(--gold-primary) !important; }
+
+.livetix-toast.el-message--warning {
+  border-color: rgba(232, 180, 90, .25) !important;
+}
+.livetix-toast.el-message--warning::before { background: linear-gradient(180deg, #E8B45A, #9B7A34); }
+.livetix-toast.el-message--warning .el-message__icon { color: #E8B45A !important; }
+
+.livetix-toast.el-message--info {
+  border-color: rgba(143, 168, 200, .2) !important;
+}
+.livetix-toast.el-message--info::before { background: linear-gradient(180deg, #8FA8C8, #5A6E88); }
+.livetix-toast.el-message--info .el-message__icon { color: #8FA8C8 !important; }
+.livetix-toast .el-message__icon { font-size: 22px !important; margin-right: 12px !important; }
+.livetix-toast .el-message__content { font-size: 15px !important; line-height: 1.6 !important; font-weight: 500 !important; color: var(--text-primary) !important; letter-spacing: .3px; }
+.livetix-toast .el-message__closeBtn { color: rgba(255,255,255,.4) !important; font-size: 18px !important; }
+.livetix-toast .el-message__closeBtn:hover { color: rgba(255,255,255,.8) !important; }
+
+// 入场动画：从中心缩放弹入
+.el-message-fade-enter-from {
+  opacity: 0 !important;
+  transform: translate(-50%, -50%) scale(.85) !important;
+}
+.el-message-fade-enter-active {
+  transition: all .3s cubic-bezier(.34, 1.56, .64, 1) !important;  // 回弹曲线，更有力度
+}
+.el-message-fade-leave-active {
+  transition: all .2s ease-in !important;
+}
+.el-message-fade-leave-to {
+  opacity: 0 !important;
+  transform: translate(-50%, -50%) scale(.9) !important;
+}
+
+// ========== MessageBox 屏幕正中间 + 不透明背景 ==========
+.el-message-box {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  background: #1a1a1a !important;
+  border: 1px solid #333 !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,.7) !important;
+}
+.el-message-box__header { background: #111 !important; border-bottom: 1px solid #222 !important; }
+.el-message-box__title { color: #fff !important; }
+.el-message-box__content { color: #bbb !important; }
+.el-message-box__btns .el-button { border-radius: 6px !important; }
+.el-overlay { background: rgba(0,0,0,.6) !important; }
+
+// ========== Element Plus Overrides ==========
+.el-button--primary {
+  background: var(--gold-gradient) !important;
+  border: none !important;
+  color: #000 !important;
+  font-weight: 600 !important;
+}
+.el-button--primary:hover {
+  box-shadow: 0 8px 30px rgba(200, 164, 90, 0.35) !important;
+}
+
+.el-tag--dark {
+  border: none !important;
+  font-weight: 500 !important;
+}
+
+.el-pagination.is-background .el-pager li:not(.is-disabled).is-active {
+  background: var(--gold-gradient) !important;
+  color: #000 !important;
+}
+
+.el-empty__description p { color: var(--text-muted) !important; }
+
+// ========== Animations ==========
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

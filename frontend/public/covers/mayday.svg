@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="560" viewBox="0 0 400 560">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1b69"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4A853"/>
+      <stop offset="100%" style="stop-color:#F5D78C"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="560" fill="url(#bg)"/>
+  <text x="200" y="200" text-anchor="middle" fill="url(#gold)" font-size="80" font-family="Arial">🎸</text>
+  <text x="200" y="300" text-anchor="middle" fill="#F5D78C" font-size="24" font-weight="bold" font-family="Microsoft YaHei,SimHei,sans-serif">五月天</text>
+  <text x="200" y="340" text-anchor="middle" fill="#B0B0B0" font-size="16" font-family="Microsoft YaHei,SimHei,sans-serif">「回到那一天」巡回演唱会</text>
+  <text x="200" y="380" text-anchor="middle" fill="#D4A853" font-size="14" font-family="Arial">2026.09.01 上海</text>
+  <rect x="120" y="430" width="160" height="44" rx="22" fill="url(#gold)"/>
+  <text x="200" y="458" text-anchor="middle" fill="#000" font-size="16" font-weight="bold" font-family="Microsoft YaHei,SimHei,sans-serif">¥480 起</text>
+</svg>
