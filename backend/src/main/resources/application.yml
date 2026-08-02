@@ -1,0 +1,149 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: livetix
+
+  profiles:
+    active: dev
+
+  # MySQL
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/livetix?useUnicode=true&characterEncoding=UTF-8&characterSetResults=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:hy2869956376}
+    # P0-5: Hikari 连接池扩容 — 20→100，支撑秒杀并发
+    hikari:
+      minimum-idle: 20
+      maximum-pool-size: 100
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  # Redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      # P0-5: Lettuce 连接池扩容 — 16→64，支撑限流/锁/缓存/库存共用
+      lettuce:
+        pool:
+          max-active: 64
+          max-idle: 16
+          min-idle: 8
+          max-wait: 3000ms
+
+  # Jackson
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+
+  # File upload
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+# MyBatis-Plus
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# Sa-Token
+sa-token:
+  token-name: Authorization
+  timeout: 604800       # 7 days (seconds)
+  active-timeout: 1800  # 55 修复: 30min 无操作自动下线（防 token 被盗后长期利用）
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: true
+  jwt-secret-key: livetix_jwt_secret_2026_black_gold
+
+# RocketMQ
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: livetix-producer-group
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 3
+  consumer:
+    group: livetix-consumer-group
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      # 30 修复: 生产环境改为 never，避免泄露 DB/Redis 连接信息
+      show-details: ${HEALTH_DETAILS:never}
+
+# AES encryption keys (override via environment variables in production)
+aes:
+  secret-key: ${AES_SECRET_KEY:LiveTixDevKey2026!@#$%^&*()123456}
+  iv: ${AES_IV:LiveTixIV2026!@#$}
+
+# CORS allowed origins（前端开发服务器地址）
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+# Payment callback signature secret
+payment:
+  callback-secret: ${PAYMENT_CALLBACK_SECRET:livetix_pay_callback_secret_2026}
+
+# File upload
+livetix:
+  upload:
+    dir: ${UPLOAD_DIR:C:/Users/29153/Desktop/LiveTix/uploads}
+    url-prefix: /uploads
+  order:
+    # 订单支付超时时间（分钟），默认15分钟
+    timeout-minutes: 15
+    # P0-5: Redis 分布式锁超时延长至 30s（兜底用，核心并发防线为 DB 乐观锁）
+    lock-timeout-seconds: 30
+    # 超时订单取消批次大小（每次最多处理N条）
+    cancel-batch-size: 100
+    # 抢票令牌桶容量
+    rush-token-bucket-capacity: 500
+    # 抢票令牌桶填充速率（每秒）
+    rush-token-fill-rate: 200
+
+# SpringDoc OpenAPI
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: false
+
+# Logging (logback-spring.xml 中已配置 MDC traceId 格式)
+logging:
+  level:
+    root: INFO
+    com.livetix: DEBUG
