@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d3b0d"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#D4A853"/>
+      <stop offset="100%" style="stop-color:#F5D78C"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="500" fill="url(#bg)"/>
+  <circle cx="200" cy="250" r="180" fill="none" stroke="#E85D75" stroke-width="1" opacity="0.2"/>
+  <circle cx="200" cy="250" r="120" fill="none" stroke="#E85D75" stroke-width="1" opacity="0.3"/>
+  <text x="200" y="280" text-anchor="middle" fill="#E85D75" font-size="80" font-family="Arial">🍓</text>
+  <text x="560" y="200" fill="#F5D78C" font-size="42" font-weight="bold" font-family="Microsoft YaHei,SimHei,sans-serif">草莓音乐节 2026</text>
+  <text x="560" y="260" fill="#B0B0B0" font-size="24" font-family="Microsoft YaHei,SimHei,sans-serif">双日狂欢 · 成都站</text>
+  <text x="560" y="310" fill="#D4A853" font-size="20" font-family="Arial">2026.08.20-21  |  成都凤凰山体育公园</text>
+  <rect x="560" y="350" width="180" height="50" rx="25" fill="url(#gold)"/>
+  <text x="650" y="383" text-anchor="middle" fill="#000" font-size="20" font-weight="bold" font-family="Microsoft YaHei,SimHei,sans-serif">立即抢购</text>
+</svg>
